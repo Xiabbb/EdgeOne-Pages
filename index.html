@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小学生英语练习</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <title>小学英语学习乐园</title>
     <style>
         * {
             margin: 0;
@@ -13,383 +12,114 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            background: #f5f5f5;
-            color: #333;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 2rem 0;
         }
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 2rem;
         }
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
         }
         .title {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 2rem;
+            color: #1a73e8;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
         }
-        .word-bank-selection {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .word-bank-btn {
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            background: #3498db;
-            color: white;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-        }
-        .word-bank-btn:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-        }
-        .stats-card {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            text-align: center;
-        }
-        .stat-item {
-            padding: 1rem;
-        }
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        .stat-label {
-            color: #666;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #eee;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 1rem 0;
-        }
-        .progress-fill {
-            height: 100%;
-            background: #2ecc71;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        .control-panel {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-        }
-        .control-btn {
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            background: #e74c3c;
-            color: white;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        .control-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-        .exercise-card {
-            display: none;
-        }
-        .exercise-card.active {
-            display: block;
-        }
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        .option-btn {
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            background: #f1c40f;
-            color: #2c3e50;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        .option-btn:hover {
-            background: #f39c12;
-        }
-        .word-display {
-            font-size: 2rem;
-            text-align: center;
-            margin: 2rem 0;
-            color: #2c3e50;
-        }
-        .spelling-input {
-            width: 100%;
-            padding: 1rem;
+        .subtitle {
+            color: #5f6368;
             font-size: 1.2rem;
-            border: 2px solid #bdc3c7;
-            border-radius: 8px;
-            margin: 1rem 0;
         }
-        .submit-btn {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            background: #2ecc71;
-            color: white;
+        .word-banks {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .word-bank-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
             cursor: pointer;
-            font-size: 1.2rem;
-            margin-top: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid #e8eaed;
         }
-        .submit-btn:hover {
-            background: #27ae60;
+        .word-bank-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-color: #1a73e8;
+        }
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .card-title {
+            color: #1a73e8;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .card-description {
+            color: #5f6368;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .word-count {
+            display: inline-block;
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
-    <div id="app" class="container">
-        <!-- 首页 - 单词库选择 -->
-        <div v-if="!selectedWordBank" class="card">
-            <h1 class="title">选择单词库</h1>
-            <div class="word-bank-selection">
-                <button 
-                    v-for="bank in wordBanks" 
-                    :key="bank.id"
-                    @click="selectWordBank(bank.id)"
-                    class="word-bank-btn"
-                >
-                    {{ bank.name }}
-                </button>
-            </div>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">欢迎来到英语学习乐园</h1>
+            <p class="subtitle">选择一个单词库开始你的英语学习之旅吧！</p>
         </div>
-
-        <!-- 练习主界面 -->
-        <div v-else>
-            <!-- 统计卡片 -->
-            <div class="card stats-card">
-                <div class="stat-item">
-                    <div class="stat-value">{{ stats.correct }}</div>
-                    <div class="stat-label">答对数</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">{{ stats.wrong }}</div>
-                    <div class="stat-label">答错数</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">{{ stats.accuracy }}%</div>
-                    <div class="stat-label">正确率</div>
-                </div>
+        <div class="word-banks">
+            <div class="word-bank-card" onclick="selectWordBank('1')">
+                <div class="card-icon">📚</div>
+                <h2 class="card-title">基础单词库</h2>
+                <p class="card-description">适合初学者的基础词汇，包含日常生活中最常用的单词。</p>
+                <span class="word-count">100个单词</span>
             </div>
-
-            <!-- 进度条 -->
-            <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: progress + '%' }"></div>
+            <div class="word-bank-card" onclick="selectWordBank('2')">
+                <div class="card-icon">🌟</div>
+                <h2 class="card-title">进阶单词库</h2>
+                <p class="card-description">包含更多常用词汇，帮助你扩展词汇量。</p>
+                <span class="word-count">150个单词</span>
             </div>
-
-            <!-- 控制面板 -->
-            <div class="card control-panel">
-                <button 
-                    v-for="mode in modes" 
-                    :key="mode.id"
-                    @click="selectMode(mode.id)"
-                    class="control-btn"
-                    :style="{ background: mode.color }"
-                >
-                    {{ mode.name }}
-                </button>
+            <div class="word-bank-card" onclick="selectWordBank('3')">
+                <div class="card-icon">🚀</div>
+                <h2 class="card-title">提高单词库</h2>
+                <p class="card-description">更丰富的词汇和表达，提升你的英语水平。</p>
+                <span class="word-count">200个单词</span>
             </div>
-
-            <!-- 练习区域 -->
-            <div class="card exercise-area">
-                <!-- 单词猜猜猜 -->
-                <div v-if="currentMode === 'guess'" class="exercise-card active">
-                    <div class="word-display">{{ currentWord.english }}</div>
-                    <div class="options-grid">
-                        <button 
-                            v-for="option in currentOptions" 
-                            :key="option"
-                            @click="checkAnswer(option)"
-                            class="option-btn"
-                        >
-                            {{ option }}
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 单词拼写 -->
-                <div v-if="currentMode === 'spell'" class="exercise-card active">
-                    <div class="word-display">{{ currentWord.chinese }}</div>
-                    <input 
-                        type="text" 
-                        v-model="userInput"
-                        class="spelling-input"
-                        placeholder="请输入英文单词"
-                        @keyup.enter="checkSpelling"
-                    >
-                    <button @click="checkSpelling" class="submit-btn">提交</button>
-                </div>
+            <div class="word-bank-card" onclick="selectWordBank('all')">
+                <div class="card-icon">🌈</div>
+                <h2 class="card-title">完整词汇库</h2>
+                <p class="card-description">包含所有单词，全面提升你的英语能力。</p>
+                <span class="word-count">450个单词</span>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { wordBanks, audioFiles } from './data.js'
-        const { createApp } = Vue
-
-        createApp({
-            data() {
-                return {
-                    selectedWordBank: null,
-                    currentMode: null,
-                    wordBanks: [
-                        { id: 1, name: '单词库 1' },
-                        { id: 2, name: '单词库 2' },
-                        { id: 3, name: '单词库 3' },
-                        { id: 4, name: '完整单词库' }
-                    ],
-                    stats: {
-                        correct: 0,
-                        wrong: 0,
-                        accuracy: 0
-                    },
-                    progress: 0,
-                    modes: [
-                        { id: 'guess', name: '单词猜猜猜', color: '#e74c3c' },
-                        { id: 'spell', name: '单词拼写', color: '#3498db' },
-                        { id: 'sentence', name: '句型变化练习', color: '#2ecc71' }
-                    ],
-                    currentWord: { english: '', chinese: '' },
-                    currentOptions: [],
-                    userInput: '',
-                    wordList: [],
-                    wrongWords: [],
-                    totalWords: 0
-                }
-            },
-            methods: {
-                selectWordBank(bankId) {
-                    this.selectedWordBank = bankId
-                    this.loadWordList(bankId)
-                },
-                selectMode(modeId) {
-                    this.currentMode = modeId
-                    this.resetExercise()
-                },
-                updateStats() {
-                    const total = this.stats.correct + this.stats.wrong
-                    this.stats.accuracy = total ? Math.round((this.stats.correct / total) * 100) : 0
-                },
-                loadWordList(bankId) {
-                    this.wordList = [...wordBanks[bankId]]
-                    this.totalWords = this.wordList.length
-                    this.resetExercise()
-                },
-                resetExercise() {
-                    this.progress = 0
-                    this.stats.correct = 0
-                    this.stats.wrong = 0
-                    this.stats.accuracy = 0
-                    this.wrongWords = []
-                    this.getNextWord()
-                },
-                getRandomWords(count, exclude = null) {
-                    const availableWords = this.wordList.filter(word => 
-                        exclude ? word.english !== exclude.english : true
-                    )
-                    const words = [...availableWords]
-                    for (let i = words.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1))
-                        ;[words[i], words[j]] = [words[j], words[i]]
-                    }
-                    return words.slice(0, count)
-                },
-                getNextWord() {
-                    if (this.wrongWords.length > 0 && Math.random() < 0.7) {
-                        this.currentWord = this.wrongWords[Math.floor(Math.random() * this.wrongWords.length)]
-                    } else {
-                        const availableWords = this.wordList.filter(word => 
-                            !this.wrongWords.some(w => w.english === word.english)
-                        )
-                        if (availableWords.length === 0) {
-                            if (this.wrongWords.length === 0) {
-                                alert('恭喜你完成所有单词练习！')
-                                this.resetExercise()
-                                return
-                            }
-                            this.currentWord = this.wrongWords[Math.floor(Math.random() * this.wrongWords.length)]
-                        } else {
-                            this.currentWord = availableWords[Math.floor(Math.random() * availableWords.length)]
-                        }
-                    }
-
-                    if (this.currentMode === 'guess') {
-                        const otherWords = this.getRandomWords(5, this.currentWord)
-                        this.currentOptions = [
-                            this.currentWord.chinese,
-                            ...otherWords.map(word => word.chinese)
-                        ].sort(() => Math.random() - 0.5)
-                    }
-                },
-                playAudio(type) {
-                    const audio = new Audio(audioFiles[type])
-                    audio.play()
-                },
-                checkAnswer(selectedOption) {
-                    if (selectedOption === this.currentWord.chinese) {
-                        this.playAudio('correct')
-                        this.stats.correct++
-                        this.progress = (this.stats.correct / this.totalWords) * 100
-                        this.wrongWords = this.wrongWords.filter(word => 
-                            word.english !== this.currentWord.english
-                        )
-                    } else {
-                        this.playAudio('wrong')
-                        this.stats.wrong++
-                        if (!this.wrongWords.some(word => word.english === this.currentWord.english)) {
-                            this.wrongWords.push(this.currentWord)
-                        }
-                    }
-                    this.updateStats()
-                    setTimeout(() => this.getNextWord(), 1000)
-                },
-                checkSpelling() {
-                    const userAnswer = this.userInput.trim().toLowerCase()
-                    const correctAnswer = this.currentWord.english.toLowerCase()
-
-                    if (userAnswer === correctAnswer) {
-                        this.playAudio('correct')
-                        this.stats.correct++
-                        this.progress = (this.stats.correct / this.totalWords) * 100
-                        this.wrongWords = this.wrongWords.filter(word => 
-                            word.english !== this.currentWord.english
-                        )
-                    } else {
-                        this.playAudio('wrong')
-                        this.stats.wrong++
-                        if (!this.wrongWords.some(word => word.english === this.currentWord.english)) {
-                            this.wrongWords.push(this.currentWord)
-                        }
-                        alert(`正确答案是: ${this.currentWord.english}`)
-                    }
-                    this.updateStats()
-                    this.userInput = ''
-                    setTimeout(() => this.getNextWord(), 1000)
-                }
-            }
-        }).mount('#app')
+    <script>
+        function selectWordBank(type) {
+            localStorage.setItem('selectedWordBank', type);
+            window.location.href = 'practice.html';
+        }
     </script>
 </body>
 </html>
