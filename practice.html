@@ -129,13 +129,44 @@
         .word-option:hover {
             border-color: #4CAF50;
         }
-        .spelling-input {
+        .letter-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            max-width: 100%;
+            padding: 10px;
+        }
+        .spell-input {
             width: 100%;
-            padding: 0.8rem;
+            height: 45px;
+            text-align: center;
             font-size: 1.2rem;
-            border: 2px solid #ddd;
+            border: 2px solid #e8f0fe;
             border-radius: 8px;
-            margin-top: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .spell-input:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 4px 8px rgba(26, 115, 232, 0.1);
+        }
+        .spell-input:hover {
+            border-color: #1a73e8;
+            box-shadow: 0 4px 8px rgba(26, 115, 232, 0.1);
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0.5rem;
+            width: 100%;
+            max-width: 500px;
         }
         .submit-btn {
             margin-top: 1rem;
@@ -146,6 +177,26 @@
             border: none;
             border-radius: 8px;
             font-size: 1.1rem;
+        }
+        .feedback-message {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .feedback-message.show {
+            opacity: 1;
+        }
+        .feedback-message.correct {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .feedback-message.wrong {
+            background-color: #ffebee;
+            color: #c62828;
         }
     </style>
 </head>
@@ -190,8 +241,11 @@
 
         <div id="spell-area" class="practice-area">
             <h3 id="spell-prompt" class="text-center mb-4"></h3>
-            <input type="text" id="spell-input" class="spelling-input" placeholder="请输入英文单词">
+            <div class="spell-input-container">
+                <input type="text" id="spell-input" class="spell-input" maxlength="50">
+            </div>
             <button onclick="checkSpelling()" class="submit-btn">提交</button>
+            <div id="feedback-message" class="feedback-message"></div>
         </div>
 
         <div id="pattern-area" class="practice-area">
@@ -238,7 +292,12 @@
         }
 
         // 开始练习模式
-        function startMode(mode) {
+        async function startMode(mode) {
+            // 确保单词库已加载
+            if (wordBank.length === 0) {
+                await initialize();
+            }
+
             document.querySelectorAll('.practice-area').forEach(area => area.style.display = 'none');
             document.getElementById(`${mode}-area`).style.display = 'block';
 
@@ -299,30 +358,84 @@
 
         // 检查猜词答案
         function checkGuess(answer) {
+            // 禁用所有选项按钮
+            document.querySelectorAll('.word-option').forEach(button => {
+                button.disabled = true;
+            });
+
             if (answer === currentWord[1]) {
                 correctAnswer();
             } else {
                 wrongAnswer();
             }
-            setTimeout(startWordGuess, 1500);
+            setTimeout(() => {
+                startWordGuess();
+                // 新一题开始时启用所有按钮
+                document.querySelectorAll('.word-option').forEach(button => {
+                    button.disabled = false;
+                });
+            }, 1500);
         }
 
         // 开始单词拼写
         function startWordSpell() {
             currentWord = getRandomWord();
             document.getElementById('spell-prompt').textContent = currentWord[1];
-            document.getElementById('spell-input').value = '';
+
+            // 清空并聚焦输入框
+            const input = document.getElementById('spell-input');
+            input.value = '';
+            input.focus();
+
+            // 确保提交按钮可用
+            const submitButton = document.querySelector('.submit-btn');
+            submitButton.disabled = false;
+
+            // 添加Enter键提交功能
+            input.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!submitButton.disabled) {
+                        checkSpelling();
+                    }
+                }
+            };
         }
 
         // 检查拼写
         function checkSpelling() {
-            const input = document.getElementById('spell-input').value.trim().toLowerCase();
-            if (input === currentWord[0].toLowerCase()) {
+            // 禁用提交按钮
+            const submitButton = document.querySelector('.submit-btn');
+            submitButton.disabled = true;
+
+            const userInput = document.getElementById('spell-input').value.toLowerCase();
+            const targetWord = currentWord[0].toLowerCase();
+            
+            // 比较用户输入和目标单词（忽略标点符号）
+            const cleanUserInput = userInput.replace(/[^a-zA-Z0-9]/g, '');
+            const cleanTargetWord = targetWord.replace(/[^a-zA-Z0-9]/g, '');
+            
+            const feedbackMessage = document.getElementById('feedback-message');
+            
+            if (cleanUserInput === cleanTargetWord) {
+                feedbackMessage.textContent = '回答正确！';
+                feedbackMessage.className = 'feedback-message correct show';
                 correctAnswer();
+                setTimeout(() => {
+                    playWordAudio();
+                }, 1000);
             } else {
+                feedbackMessage.textContent = `回答错误！正确答案是: ${currentWord[0]}`;
+                feedbackMessage.className = 'feedback-message wrong show';
                 wrongAnswer();
             }
-            setTimeout(startWordSpell, 1500);
+
+            setTimeout(() => {
+                feedbackMessage.className = 'feedback-message';
+                startWordSpell();
+                // 新一题开始时启用提交按钮
+                submitButton.disabled = false;
+            }, 2500);
         }
 
         // 答对处理
