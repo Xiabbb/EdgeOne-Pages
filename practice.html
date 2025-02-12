@@ -100,6 +100,12 @@
             transition: all 0.3s ease;
             margin: 0;
         }
+        .mode-btn.utility-btn {
+            background: #1a73e8;
+        }
+        .mode-btn.utility-btn:hover {
+            background: #1557b0;
+        }
         .mode-btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -227,6 +233,8 @@
             <button class="mode-btn" onclick="startMode('guess')">单词猜猜猜</button>
             <button class="mode-btn" onclick="startMode('spell')">单词拼写</button>
             <button class="mode-btn" onclick="startMode('pattern')">句型变化练习</button>
+            <button class="mode-btn utility-btn" onclick="resetStats()">重置统计</button>
+            <button class="mode-btn utility-btn" onclick="changeWordBank()">更换单词库</button>
         </div>
 
         <div id="guess-area" class="practice-area">
@@ -457,6 +465,22 @@
 
         // 初始化应用
         initialize();
+
+        // 重置统计数据
+        function resetStats() {
+            stats = {
+                correct: 0,
+                wrong: 0,
+                total: 0,
+                progress: 0
+            };
+            updateStats();
+        }
+
+        // 更换单词库
+        function changeWordBank() {
+            window.location.href = 'index.html';
+        }
     </script>
 </body>
 </html>
