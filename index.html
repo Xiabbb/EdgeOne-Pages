@@ -108,10 +108,40 @@
     </div>
 
     <script>
+        async function loadWordCount() {
+            try {
+                const responses = await Promise.all([
+                    fetch('data/word_data1.json'),
+                    fetch('data/word_data2.json'),
+                    fetch('data/word_data3.json')
+                ]);
+                const allData = await Promise.all(responses.map(r => r.json()));
+                
+                // 计算每个单词库的单词数量
+                const counts = allData.map(data => Object.keys(data['小学英语词汇']).length);
+                const totalCount = counts.reduce((a, b) => a + b, 0);
+                
+                // 更新显示
+                document.querySelectorAll('.word-bank-card').forEach((card, index) => {
+                    const countElement = card.querySelector('.word-count');
+                    if (index < 3) {
+                        countElement.textContent = `${counts[index]}个单词`;
+                    } else {
+                        countElement.textContent = `${totalCount}个单词`;
+                    }
+                });
+            } catch (error) {
+                console.error('加载单词数量失败:', error);
+            }
+        }
+
         function selectWordBank(type) {
             localStorage.setItem('selectedWordBank', type);
             window.location.href = 'practice.html';
         }
+
+        // 页面加载完成后计算单词数量
+        document.addEventListener('DOMContentLoaded', loadWordCount);
     </script>
 </body>
 </html>
