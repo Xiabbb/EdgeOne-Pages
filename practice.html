@@ -283,9 +283,29 @@
         // 初始化
         async function initialize() {
             const selectedBank = localStorage.getItem('selectedWordBank');
-            const response = await fetch(`data/word_data${selectedBank}.json`);
-            const data = await response.json();
-            wordBank = Object.entries(data['小学英语词汇']);
+            let wordData = {};
+            
+            if (selectedBank === 'all') {
+                // 加载所有单词库
+                const responses = await Promise.all([
+                    fetch('data/word_data1.json'),
+                    fetch('data/word_data2.json'),
+                    fetch('data/word_data3.json')
+                ]);
+                const allData = await Promise.all(responses.map(r => r.json()));
+                
+                // 合并所有单词库的数据
+                allData.forEach(data => {
+                    Object.assign(wordData, data['小学英语词汇']);
+                });
+            } else {
+                // 加载单个单词库
+                const response = await fetch(`data/word_data${selectedBank}.json`);
+                const data = await response.json();
+                wordData = data['小学英语词汇'];
+            }
+            
+            wordBank = Object.entries(wordData);
             updateStats();
         }
 
