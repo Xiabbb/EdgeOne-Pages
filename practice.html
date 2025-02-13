@@ -204,6 +204,92 @@
             background-color: #ffebee;
             color: #c62828;
         }
+        .sentence-display {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .chinese-hint {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .underline-text {
+            text-decoration: underline;
+            color: #007bff;
+        }
+        .input-area {
+            margin: 20px 0;
+        }
+        .input-area input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .hint-btn {
+            background-color: #ffc107;
+            color: #000;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            min-width: 80px;
+            white-space: nowrap;
+        }
+        .hint-btn:hover {
+            background-color: #e0a800;
+        }
+        .hint-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            right: 50%;
+            transform: translate(50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-width: 300px;
+            width: 90%;
+            backdrop-filter: blur(5px);
+        }
+        .hint-modal-content {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.1em;
+            line-height: 1.8;
+            white-space: pre-line;
+            padding: 15px;
+            color: #333;
+        }
+        .hint-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+        }
+        .hint-modal-close:hover {
+            color: #333;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
@@ -257,8 +343,25 @@
         </div>
 
         <div id="pattern-area" class="practice-area">
-            <h3 class="text-center mb-4">句型变化练习</h3>
-            <!-- 句型练习的具体内容将在后续实现 -->
+            <div class="sentence-display">
+                <div id="original-sentence"></div>
+                <div id="type-hint" class="chinese-hint"></div>
+                <div id="chinese-translation" class="chinese-hint"></div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="pattern-answer-input" placeholder="请输入答案...">
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                <button class="submit-btn" id="pattern-submit-btn">提交</button>
+                <button class="hint-btn" id="pattern-hint-btn">提示</button>
+            </div>
+            <div class="modal-overlay" id="modal-overlay"></div>
+            <div class="hint-modal" id="hint-modal">
+                <button class="hint-modal-close" id="hint-modal-close">&times;</button>
+                <div class="hint-modal-content" id="hint-modal-content"></div>
+            </div>
         </div>
     </div>
 
@@ -266,9 +369,13 @@
         // 音频对象
         const correctAudio = new Audio('audio/correct.mp3');
         const wrongAudio = new Audio('audio/wrong.mp3');
-        let wordAudio = null;
 
-        // 统计数据
+        // 全局变量声明
+        let patternExercises = [];
+        let currentPatternIndex = 0;
+        let wordAudio = null;
+        let currentWord = null;
+        let wordBank = [];
         let stats = {
             correct: 0,
             wrong: 0,
@@ -276,37 +383,170 @@
             progress: 0
         };
 
-        // 当前练习数据
-        let currentWord = null;
-        let wordBank = [];
+        // 加载句型练习数据
+        async function loadPatternExercises() {
+            try {
+                const response = await fetch('data/pattern_exercises.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                patternExercises = await response.json();
+                if (!Array.isArray(patternExercises)) {
+                    throw new Error('无效的练习数据格式');
+                }
+                showPatternExercise();
+            } catch (error) {
+                console.error('加载句型练习数据失败:', error);
+                alert('加载练习数据失败，请稍后重试');
+            }
+        }
+
+        // 显示当前句型练习题目
+        function showPatternExercise() {
+            if (!Array.isArray(patternExercises) || patternExercises.length === 0) {
+                console.error('练习数据未正确加载');
+                return;
+            }
+
+            if (currentPatternIndex >= patternExercises.length) {
+                alert('恭喜你完成所有句型练习！');
+                return;
+            }
+
+            const exercise = patternExercises[currentPatternIndex];
+            const sentence = exercise.sentence;
+            const underlineWord = exercise.underline;
+
+            const elements = {
+                'original-sentence': sentence.replace(underlineWord, `<span class="underline-text">${underlineWord}</span>`),
+                'type-hint': `类型：${exercise.type}`,
+                'chinese-translation': exercise.chinese_translation,
+                'pattern-current': currentPatternIndex + 1
+            };
+
+            // 安全地更新DOM元素
+            Object.entries(elements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (id === 'original-sentence') {
+                        element.innerHTML = value;
+                    } else {
+                        element.textContent = value;
+                    }
+                }
+            });
+
+            // 重置输入和提示
+            const hintText = document.getElementById('pattern-hint-text');
+            const answerInput = document.getElementById('pattern-answer-input');
+            if (hintText) hintText.style.display = 'none';
+            if (answerInput) answerInput.value = '';
+        }
+
+        // 检查句型练习答案
+        function checkPatternAnswer() {
+            const userAnswer = document.getElementById('pattern-answer-input').value.trim();
+            const correctAnswer = patternExercises[currentPatternIndex].answer;
+
+            if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                correctAudio.play();
+                stats.correct++;
+                stats.total++;
+                currentPatternIndex++;
+                showPatternExercise();
+            } else {
+                wrongAudio.play();
+                stats.wrong++;
+                stats.total++;
+            }
+            updateStats();
+        }
+
+        // 显示句型练习提示
+        function showPatternHint() {
+            const modal = document.getElementById('hint-modal');
+            const modalContent = document.getElementById('hint-modal-content');
+            const overlay = document.getElementById('modal-overlay');
+            const exercise = patternExercises[currentPatternIndex];
+            const hintContent = exercise.hint || exercise.c;
+            
+            if (hintContent) {
+                modalContent.textContent = hintContent;
+                modal.style.display = 'block';
+                overlay.style.display = 'block';
+            }
+        }
+
+        // 关闭提示模态框
+        function closeHintModal() {
+            const modal = document.getElementById('hint-modal');
+            const overlay = document.getElementById('modal-overlay');
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        // 添加关闭按钮事件监听
+        document.getElementById('hint-modal-close').addEventListener('click', closeHintModal);
+        // 点击遮罩层关闭模态框
+        document.getElementById('modal-overlay').addEventListener('click', closeHintModal);
+
+        // 添加句型练习按钮事件监听
+        document.getElementById('pattern-submit-btn').addEventListener('click', checkPatternAnswer);
+        document.getElementById('pattern-hint-btn').addEventListener('click', showPatternHint);
 
         // 初始化
         async function initialize() {
-            const selectedBank = localStorage.getItem('selectedWordBank');
-            let wordData = {};
-            
-            if (selectedBank === 'all') {
-                // 加载所有单词库
-                const responses = await Promise.all([
-                    fetch('data/word_data1.json'),
-                    fetch('data/word_data2.json'),
-                    fetch('data/word_data3.json')
-                ]);
-                const allData = await Promise.all(responses.map(r => r.json()));
+            try {
+                const selectedBank = localStorage.getItem('selectedWordBank');
+                if (!selectedBank) {
+                    throw new Error('未选择单词库');
+                }
+
+                let wordData = {};
                 
-                // 合并所有单词库的数据
-                allData.forEach(data => {
-                    Object.assign(wordData, data['小学英语词汇']);
-                });
-            } else {
-                // 加载单个单词库
-                const response = await fetch(`data/word_data${selectedBank}.json`);
-                const data = await response.json();
-                wordData = data['小学英语词汇'];
-            }
+                if (selectedBank === 'all') {
+                    // 加载所有单词库
+                    const responses = await Promise.all([
+                        fetch('data/word_data1.json'),
+                        fetch('data/word_data2.json'),
+                        fetch('data/word_data3.json')
+                    ]);
+
+                    // 检查每个响应的状态
+                    responses.forEach((response, index) => {
+                        if (!response.ok) {
+                            throw new Error(`加载单词库${index + 1}失败`);
+                        }
+                    });
+
+                    const allData = await Promise.all(responses.map(r => r.json()));
+                    
+                    // 合并所有单词库的数据
+                    allData.forEach(data => {
+                        if (data && data['小学英语词汇']) {
+                            Object.assign(wordData, data['小学英语词汇']);
+                        }
+                    });
+                } else {
+                    // 加载单个单词库
+                    const response = await fetch(`data/word_data${selectedBank}.json`);
+                    if (!response.ok) {
+                        throw new Error(`加载单词库${selectedBank}失败`);
+                    }
+                    const data = await response.json();
+                    if (!data || !data['小学英语词汇']) {
+                        throw new Error('单词库数据格式错误');
+                    }
+                    wordData = data['小学英语词汇'];
+                }
             
-            wordBank = Object.entries(wordData);
-            updateStats();
+                wordBank = Object.entries(wordData);
+                updateStats();
+            } catch (error) {
+                console.error('初始化失败:', error);
+                alert('加载单词库失败，请返回首页重新选择单词库');
+                window.location.href = 'index.html';
+            }
         }
 
         // 更新统计信息
@@ -321,26 +561,191 @@
 
         // 开始练习模式
         async function startMode(mode) {
-            // 确保单词库已加载
-            if (wordBank.length === 0) {
-                await initialize();
-            }
-
             document.querySelectorAll('.practice-area').forEach(area => area.style.display = 'none');
             document.getElementById(`${mode}-area`).style.display = 'block';
 
             switch(mode) {
                 case 'guess':
+                    if (wordBank.length === 0) await initialize();
                     startWordGuess();
                     break;
                 case 'spell':
+                    if (wordBank.length === 0) await initialize();
                     startWordSpell();
                     break;
                 case 'pattern':
-                    startPatternPractice();
+                    await loadPatternExercises();
                     break;
             }
         }
+
+        // 开始句型练习
+        async function startPatternPractice() {
+            try {
+                const response = await fetch('data/pattern_exercises.json');
+                patternExercises = await response.json();
+                currentPatternIndex = 0;
+                loadPatternExercise();
+            } catch (error) {
+                console.error('加载句型练习失败:', error);
+            }
+        }
+
+        // 加载当前句型练习
+        function loadPatternExercise() {
+            if (currentPatternIndex >= patternExercises.length) {
+                alert('恭喜你完成所有句型练习！');
+                return;
+            }
+
+            const exercise = patternExercises[currentPatternIndex];
+            const sentence = exercise.sentence;
+            const underlineWord = exercise.underline;
+
+            document.getElementById('original-sentence').innerHTML = 
+                sentence.replace(underlineWord, `<span class="underline-text">${underlineWord}</span>`);
+            document.getElementById('type-hint').textContent = `类型：${exercise.type}`;
+            document.getElementById('chinese-translation').textContent = exercise.chinese_translation;
+            document.getElementById('pattern-hint-text').style.display = 'none';
+            document.getElementById('pattern-answer-input').value = '';
+
+            // 更新进度条
+            const progress = ((currentPatternIndex + 1) / patternExercises.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-text').textContent = 
+                `${currentPatternIndex + 1}/${patternExercises.length}`;
+        }
+
+        // 显示句型练习提示
+        document.getElementById('pattern-hint-btn').addEventListener('click', () => {
+            const exercise = patternExercises[currentPatternIndex];
+            const hintText = document.getElementById('pattern-hint-text');
+            hintText.textContent = exercise.hint;
+            hintText.style.display = 'block';
+        });
+
+        // 检查句型练习答案
+        document.getElementById('pattern-submit-btn').addEventListener('click', () => {
+            const userAnswer = document.getElementById('pattern-answer-input').value.trim();
+            const exercise = patternExercises[currentPatternIndex];
+
+            if (userAnswer.toLowerCase() === exercise.answer.toLowerCase()) {
+                correctAudio.play();
+                stats.correct++;
+                stats.total++;
+                currentPatternIndex++;
+                loadPatternExercise();
+            } else {
+                wrongAudio.play();
+                stats.wrong++;
+                stats.total++;
+            }
+            updateStats();
+        });
+
+        // 添加回车键提交功能
+        document.getElementById('pattern-answer-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('pattern-submit-btn').click();
+            }
+        });
+
+        // 开始句型练习
+        async function startPatternPractice() {
+            // 加载句型练习数据
+            if (patternExercises.length === 0) {
+                const response = await fetch('/data/pattern_exercises.json');
+                patternExercises = await response.json();
+            }
+
+            loadPatternExercise();
+
+            // 绑定提交按钮事件
+            document.getElementById('pattern-submit-btn').onclick = checkPatternAnswer;
+            // 绑定提示按钮事件
+            document.getElementById('pattern-hint-btn').onclick = showPatternHint;
+            // 绑定输入框回车事件
+            document.getElementById('pattern-answer-input').onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    checkPatternAnswer();
+                }
+            };
+        }
+
+        // 加载句型练习题目
+        function loadPatternExercise() {
+            if (currentPatternIndex >= patternExercises.length) {
+                alert('恭喜你完成所有句型练习！');
+                return;
+            }
+
+            const exercise = patternExercises[currentPatternIndex];
+            const sentence = exercise.sentence;
+            const underlineWord = exercise.underline;
+
+            // 显示带下划线的句子
+            document.getElementById('original-sentence').innerHTML = 
+                sentence.replace(underlineWord, `<span class="underline-text">${underlineWord}</span>`);
+            document.getElementById('type-hint').textContent = `类型：${exercise.type}`;
+            document.getElementById('chinese-translation').textContent = exercise.chinese_translation;
+            document.getElementById('pattern-hint-text').style.display = 'none';
+            document.getElementById('pattern-answer-input').value = '';
+
+            // 更新进度条
+            stats.progress = Math.round(((currentPatternIndex + 1) / patternExercises.length) * 100);
+            updateStats();
+        }
+
+        // 检查句型答案
+        function checkPatternAnswer() {
+            const userAnswer = document.getElementById('pattern-answer-input').value.trim();
+            const correctAnswer = patternExercises[currentPatternIndex].answer;
+
+            if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                correctAudio.play();
+                stats.correct++;
+                stats.total++;
+                currentPatternIndex++;
+                loadPatternExercise();
+            } else {
+                wrongAudio.play();
+                stats.wrong++;
+                stats.total++;
+                updateStats();
+            }
+        }
+
+        // 显示句型练习提示
+        function showPatternHint() {
+            const modal = document.getElementById('hint-modal');
+            const modalContent = document.getElementById('hint-modal-content');
+            const overlay = document.getElementById('modal-overlay');
+            const exercise = patternExercises[currentPatternIndex];
+            const hintContent = exercise.hint || exercise.c;
+            
+            if (hintContent) {
+                modalContent.textContent = hintContent;
+                modal.style.display = 'block';
+                overlay.style.display = 'block';
+            }
+        }
+
+        // 关闭提示模态框
+        function closeHintModal() {
+            const modal = document.getElementById('hint-modal');
+            const overlay = document.getElementById('modal-overlay');
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        // 添加关闭按钮事件监听
+        document.getElementById('hint-modal-close').addEventListener('click', closeHintModal);
+        // 点击遮罩层关闭模态框
+        document.getElementById('modal-overlay').addEventListener('click', closeHintModal);
+
+        // 添加句型练习按钮事件监听
+        document.getElementById('pattern-submit-btn').addEventListener('click', checkPatternAnswer);
+        document.getElementById('pattern-hint-btn').addEventListener('click', showPatternHint);
 
         // 获取随机单词
         function getRandomWord() {
